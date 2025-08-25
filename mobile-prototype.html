@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blindman Stick Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 10px;
+            font-size: 18px;
+        }
+        
+        .alert-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        .status-card {
+            margin-bottom: 20px;
+        }
+        
+        .location-info {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .tracking-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .tracking-active {
+            background-color: #27ae60;
+        }
+        
+        .tracking-inactive {
+            background-color: #e74c3c;
+        }
+        
+        .battery-indicator {
+            height: 20px;
+            background-color: #3498db;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .battery-level {
+            height: 100%;
+            background-color: #27ae60;
+            width: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Blindman Stick Tracker</h1>
+        <div id="authSection">
+            <form id="loginFormMobile" class="mb-3">
+                <div class="mb-2">
+                    <label for="loginUsernameMobile" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="loginUsernameMobile" required>
+                </div>
+                <div class="mb-2">
+                    <label for="loginPasswordMobile" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="loginPasswordMobile" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <div class="text-center mt-2">
+                    <a href="#" id="showRegisterMobile">Don't have an account? Register</a>
+                </div>
+            </form>
+            <form id="registerFormMobile" class="mb-3" style="display:none;">
+                <div class="mb-2">
+                    <label for="registerUsernameMobile" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="registerUsernameMobile" required>
+                </div>
+                <div class="mb-2">
+                    <label for="registerPasswordMobile" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="registerPasswordMobile" required>
+                </div>
+                <div class="mb-2">
+                    <label for="registerConfirmMobile" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="registerConfirmMobile" required>
+                </div>
+                <div class="mb-2">
+                    <label for="registerStickNumberMobile" class="form-label">Blind Stick Number</label>
+                    <input type="text" class="form-control" id="registerStickNumberMobile" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Register</button>
+                <div class="text-center mt-2">
+                    <a href="#" id="showLoginMobile">Already have an account? Login</a>
+                </div>
+            </form>
+            <div id="formMessageMobile" class="text-center text-danger mb-3"></div>
+        </div>
+        <div id="mainSection" style="display:none;">
+            <!-- ...existing code for main UI, location, SOS, etc... -->
+            <div class="mb-3">
+                <label for="langSelect" class="form-label">Language:</label>
+                <select id="langSelect" class="form-select">
+                    <option value="en-US">English</option>
+                    <option value="rw-RW">Kinyarwanda</option>
+                </select>
+            </div>
+            <button id="testVoiceBtn" class="btn btn-secondary w-100 mb-3">Replay Last Instruction</button>
+            <button id="replyBtn" class="btn btn-primary w-100 mb-3">Reply to Dashboard</button>
+            <div id="replyStatus" class="mb-3 text-center text-info"></div>
+            <div class="card status-card">
+                <div class="card-body">
+                    <h2 class="card-title">Tracking Status</h2>
+                    <div class="d-flex align-items-center">
+                        <span class="tracking-indicator tracking-active"></span>
+                        <span>Tracking Active</span>
+                    </div>
+                    <div class="mt-3">
+                        <strong>Last Update:</strong>
+                        <div id="lastUpdate" class="text-muted">Just now</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card status-card">
+                <div class="card-body">
+                    <h2 class="card-title">Current Location</h2>
+                    <div class="location-info">
+                        Latitude: <span id="latitude">-</span><br> Longitude: <span id="longitude">-</span><br> Accuracy: <span id="accuracy">-</span> meters
+                    </div>
+                    <div>
+                        <strong>Battery Level:</strong>
+                        <div class="battery-indicator">
+                            <div class="battery-level" id="batteryLevel"></div>
+                        </div>
+                        <span id="batteryPercent">80%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card status-card">
+                <div class="card-body">
+                    <h2 class="card-title">Connection Status</h2>
+                    <div class="d-flex align-items-center">
+                        <span class="tracking-indicator tracking-active" id="connIndicator"></span>
+                        <span id="connText">Connected to Dashboard</span>
+                        <span id="reconnectSpinner" class="spinner-border spinner-border-sm ms-2" style="display:none;"></span>
+                    </div>
+                    <div class="mt-3">
+                        <strong>Server:</strong> <span id="serverStatus">Online</span>
+                    </div>
+                    <div id="errorMsg" class="text-danger mt-2"></div>
+                </div>
+            </div>
+            <div class="card status-card">
+                <div class="card-body">
+                    <h2 class="card-title">Recent Alerts</h2>
+                    <ul id="alertList" class="list-group"></ul>
+                </div>
+            </div>
+            <button id="alertButton" class="alert-button">SOS</button>
+        </div>
+
+        <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+        <script>
+            // Backend URL
+            const BACKEND_URL = "http://192.168.137.58:3000";
+
+            // Auth section logic
+            const loginFormMobile = document.getElementById('loginFormMobile');
+            const registerFormMobile = document.getElementById('registerFormMobile');
+            const showRegisterMobile = document.getElementById('showRegisterMobile');
+            const showLoginMobile = document.getElementById('showLoginMobile');
+            const formMessageMobile = document.getElementById('formMessageMobile');
+            const authSection = document.getElementById('authSection');
+            const mainSection = document.getElementById('mainSection');
+
+            showRegisterMobile.onclick = function(e) {
+                e.preventDefault();
+                loginFormMobile.style.display = 'none';
+                registerFormMobile.style.display = '';
+                formMessageMobile.textContent = '';
+            };
+            showLoginMobile.onclick = function(e) {
+                e.preventDefault();
+                registerFormMobile.style.display = 'none';
+                loginFormMobile.style.display = '';
+                formMessageMobile.textContent = '';
+            };
+
+            loginFormMobile.onsubmit = async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('loginUsernameMobile').value.trim();
+                const password = document.getElementById('loginPasswordMobile').value;
+                if (!username || !password) {
+                    formMessageMobile.textContent = 'Please enter username and password.';
+                    return;
+                }
+                try {
+                    const res = await fetch(BACKEND_URL + '/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username,
+                            password
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        formMessageMobile.textContent = data.error || 'Login failed.';
+                        return;
+                    }
+                    localStorage.setItem('authToken', data.token);
+                    authSection.style.display = 'none';
+                    mainSection.style.display = '';
+                    startApp();
+                } catch (err) {
+                    formMessageMobile.textContent = 'Network error.';
+                }
+            };
+
+            registerFormMobile.onsubmit = async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('registerUsernameMobile').value.trim();
+                const password = document.getElementById('registerPasswordMobile').value;
+                const confirm = document.getElementById('registerConfirmMobile').value;
+                const blindStickNumber = document.getElementById('registerStickNumberMobile').value.trim();
+                if (!username || !password || !confirm || !blindStickNumber) {
+                    formMessageMobile.textContent = 'Please fill all fields.';
+                    return;
+                }
+                if (password !== confirm) {
+                    formMessageMobile.textContent = 'Passwords do not match.';
+                    return;
+                }
+                try {
+                    const res = await fetch(BACKEND_URL + '/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username,
+                            password,
+                            blindStickNumber
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        formMessageMobile.textContent = data.error || 'Registration failed.';
+                        return;
+                    }
+                    formMessageMobile.textContent = 'Registration successful! You can now log in.';
+                    setTimeout(() => {
+                        registerFormMobile.style.display = 'none';
+                        loginFormMobile.style.display = '';
+                        formMessageMobile.textContent = '';
+                    }, 1500);
+                } catch (err) {
+                    formMessageMobile.textContent = 'Network error.';
+                }
+            };
+
+            // Start main app after login
+            function startApp() {
+                // DOM elements
+                const latitudeElement = document.getElementById('latitude');
+                const longitudeElement = document.getElementById('longitude');
+                const accuracyElement = document.getElementById('accuracy');
+                const lastUpdateElement = document.getElementById('lastUpdate');
+                const batteryLevelElement = document.getElementById('batteryLevel');
+                const batteryPercentElement = document.getElementById('batteryPercent');
+                const alertButton = document.getElementById('alertButton');
+                const serverStatusElement = document.getElementById('serverStatus');
+                const connIndicator = document.getElementById('connIndicator');
+                const connText = document.getElementById('connText');
+                const reconnectSpinner = document.getElementById('reconnectSpinner');
+                const errorMsg = document.getElementById('errorMsg');
+                const alertList = document.getElementById('alertList');
+
+                // Store unsent data for offline support
+                let unsentLocations = [];
+                let unsentAlerts = [];
+
+                // Recent alerts
+                let recentAlerts = [];
+
+                function addAlertToList(alert) {
+                    recentAlerts.unshift(alert);
+                    if (recentAlerts.length > 10) recentAlerts.pop();
+                    alertList.innerHTML = recentAlerts.map(a =>
+                        `<li class="list-group-item">SOS at ${a.latitude?.toFixed(5)}, ${a.longitude?.toFixed(5)}<br><small>${a.timestamp ? new Date(a.timestamp).toLocaleString() : ''}</small></li>`
+                    ).join('');
+                }
+
+                // Socket.IO connection with JWT
+                let socket = io(BACKEND_URL, {
+                    query: {
+                        token: localStorage.getItem('authToken')
+                    },
+                    reconnection: true,
+                    reconnectionAttempts: 10,
+                    reconnectionDelay: 2000
+                });
+
+                socket.on('connect', () => {
+                    serverStatusElement.textContent = "Online";
+                    connIndicator.className = "tracking-indicator tracking-active";
+                    connText.textContent = "Connected to Dashboard";
+                    reconnectSpinner.style.display = 'none';
+                    errorMsg.textContent = '';
+                    // Send any unsent data
+                    unsentLocations.forEach(loc => socket.emit('newLocation', loc));
+                    unsentLocations = [];
+                    unsentAlerts.forEach(alert => socket.emit('newAlert', alert));
+                    unsentAlerts = [];
+                });
+                socket.on('disconnect', () => {
+                    serverStatusElement.textContent = "Offline";
+                    connIndicator.className = "tracking-indicator tracking-inactive";
+                    connText.textContent = "Disconnected";
+                    reconnectSpinner.style.display = '';
+                });
+                socket.on('connect_error', (err) => {
+                    errorMsg.textContent = 'Connection error: ' + err.message;
+                });
+                socket.on('reconnect_attempt', () => {
+                    reconnectSpinner.style.display = '';
+                    connText.textContent = "Reconnecting...";
+                });
+                socket.on('reconnect_failed', () => {
+                    errorMsg.textContent = 'Failed to reconnect. Please check your network.';
+                });
+
+                // Listen for alert events from backend (if dashboard sends them)
+                socket.on('alert', addAlertToList);
+                // Listen for initialData (if backend sends recent alerts)
+                socket.on('initialData', data => {
+                    if (data.alerts && data.alerts.length) {
+                        recentAlerts = [];
+                        data.alerts.slice(-10).forEach(addAlertToList);
+                    }
+                });
+
+                // Initialize location tracking
+                let watchId = null;
+                let currentLocation = null;
+
+                if ("geolocation" in navigator) {
+                    watchId = navigator.geolocation.watchPosition(
+                        (position) => {
+                            currentLocation = position;
+                            updateLocationDisplay(position);
+                        },
+                        (error) => {
+                            let message = "Error getting location. ";
+                            switch (error.code) {
+                                case error.PERMISSION_DENIED:
+                                    message += "Permission denied. Please allow location access in your browser settings.";
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    message += "Position unavailable. Try moving to an open area or check device settings.";
+                                    break;
+                                case error.TIMEOUT:
+                                    message += "Request timed out. Try again or check your connection.";
+                                    break;
+                                default:
+                                    message += "Unknown error.";
+                            }
+                            errorMsg.textContent = message;
+                            alert(message);
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 5000
+                        }
+                    );
+                    // If no location after 10 seconds, show message
+                    setTimeout(() => {
+                        if (!currentLocation) {
+                            errorMsg.textContent = "Still waiting for location... Please check permissions and GPS settings.";
+                        }
+                    }, 10000);
+                } else {
+                    errorMsg.textContent = "Geolocation is not supported by your browser.";
+                    alert("Geolocation is not supported by your browser.");
+                }
+
+                function updateLocationDisplay(position) {
+                    latitudeElement.textContent = position.coords.latitude.toFixed(6);
+                    longitudeElement.textContent = position.coords.longitude.toFixed(6);
+                    accuracyElement.textContent = position.coords.accuracy.toFixed(2);
+                    lastUpdateElement.textContent = new Date().toLocaleTimeString();
+
+                    // Send location to backend via Socket.IO
+                    const locationData = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    };
+                    if (socket.connected) {
+                        socket.emit('newLocation', locationData);
+                    } else {
+                        unsentLocations.push(locationData);
+                    }
+                }
+
+                // Alert button functionality
+                alertButton.addEventListener('click', function() {
+                    this.style.backgroundColor = "#c0392b";
+                    setTimeout(() => {
+                        this.style.backgroundColor = "#e74c3c";
+                    }, 200);
+                    sendAlert();
+                });
+
+                function sendAlert() {
+                    if (!currentLocation) {
+                        errorMsg.textContent = "Location not available yet. Please try again in a moment.";
+                        return;
+                    }
+                    // Send alert to backend via Socket.IO
+                    const alertData = {
+                        latitude: currentLocation.coords.latitude,
+                        longitude: currentLocation.coords.longitude,
+                        accuracy: currentLocation.coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    };
+                    if (socket.connected) {
+                        socket.emit('newAlert', alertData);
+                    } else {
+                        unsentAlerts.push(alertData);
+                    }
+                    // Vibrate and notify
+                    if ("vibrate" in navigator) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                    addAlertToList(alertData);
+                    errorMsg.textContent = "Alert sent! Help is on the way.";
+                    setTimeout(() => {
+                        errorMsg.textContent = "";
+                    }, 3000);
+                }
+
+                // Simulate battery level changes
+                setInterval(() => {
+                    const batteryLevel = Math.max(20, 100 - Math.floor(Math.random() * 10));
+                    batteryLevelElement.style.width = batteryLevel + "%";
+                    batteryPercentElement.textContent = batteryLevel + "%";
+                    if (batteryLevel > 50) {
+                        batteryLevelElement.style.backgroundColor = "#27ae60";
+                    } else if (batteryLevel > 20) {
+                        batteryLevelElement.style.backgroundColor = "#f39c12";
+                    } else {
+                        batteryLevelElement.style.backgroundColor = "#e74c3c";
+                    }
+                }, 30000);
+
+                // Voice instruction support
+                let lastInstruction = 'No instruction received yet.';
+
+                function speakInstruction(text) {
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel(); // Stop any current speech
+                        const utter = new SpeechSynthesisUtterance(text);
+                        const lang = document.getElementById('langSelect').value;
+                        utter.lang = lang;
+                        window.speechSynthesis.speak(utter);
+                        // Vibrate on instruction
+                        if ("vibrate" in navigator) {
+                            navigator.vibrate([100, 50, 100]);
+                        }
+                    } else {
+                        errorMsg.textContent = 'Speech synthesis not supported on this device.';
+                    }
+                }
+
+                // Always listen for voiceInstruction event from backend
+                function handleVoiceInstruction(msg) {
+                    console.log('[DEBUG] voiceInstruction event received:', msg);
+                    let text = '';
+                    if (typeof msg === 'string') {
+                        text = msg;
+                    } else if (msg && msg.text) {
+                        text = msg.text;
+                    }
+                    if (text) {
+                        lastInstruction = text;
+                        speakInstruction(text);
+                        errorMsg.textContent = 'Instruction received: ' + text;
+                        setTimeout(() => {
+                            errorMsg.textContent = '';
+                        }, 3000);
+                    } else {
+                        console.log('[DEBUG] No valid instruction text received.');
+                    }
+                }
+                socket.off('voiceInstruction');
+                socket.on('voiceInstruction', handleVoiceInstruction);
+
+                // Test button replays last received instruction
+                document.getElementById('testVoiceBtn').addEventListener('click', function() {
+                    speakInstruction(lastInstruction);
+                });
+
+                // Reply to dashboard using speech recognition
+                const replyBtn = document.getElementById('replyBtn');
+                const replyStatus = document.getElementById('replyStatus');
+                let recognizing = false;
+                let recognition;
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognition = new SpeechRecognition();
+                    recognition.lang = document.getElementById('langSelect').value;
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+
+                    // Update recognition language when selection changes
+                    document.getElementById('langSelect').addEventListener('change', function() {
+                        recognition.lang = this.value;
+                    });
+
+                    recognition.onstart = function() {
+                        recognizing = true;
+                        replyStatus.textContent = 'Listening...';
+                    };
+                    recognition.onresult = function(event) {
+                        recognizing = false;
+                        const transcript = event.results[0][0].transcript;
+                        replyStatus.textContent = 'Sending: ' + transcript;
+                        // Send reply to backend
+                        if (socket.connected) {
+                            socket.emit('blindReply', {
+                                text: transcript
+                            });
+                        } else {
+                            errorMsg.textContent = 'Cannot send reply: offline.';
+                        }
+                        setTimeout(() => {
+                            replyStatus.textContent = '';
+                            errorMsg.textContent = '';
+                        }, 3000);
+                    };
+                    recognition.onerror = function(event) {
+                        recognizing = false;
+                        replyStatus.textContent = 'Error: ' + event.error;
+                        errorMsg.textContent = 'Speech recognition error: ' + event.error;
+                        setTimeout(() => {
+                            replyStatus.textContent = '';
+                            errorMsg.textContent = '';
+                        }, 3000);
+                    };
+                    recognition.onend = function() {
+                        recognizing = false;
+                        if (!replyStatus.textContent.startsWith('Sending:')) {
+                            replyStatus.textContent = '';
+                        }
+                    };
+                } else {
+                    replyBtn.disabled = true;
+                    replyStatus.textContent = 'Speech recognition not supported.';
+                    errorMsg.textContent = 'Speech recognition not supported.';
+                }
+
+                replyBtn.addEventListener('click', function() {
+                    if (recognition && !recognizing) {
+                        recognition.lang = document.getElementById('langSelect').value;
+                        recognition.start();
+                    }
+                });
+            }
+
+            // Auto-login if token exists
+            if (localStorage.getItem('authToken')) {
+                authSection.style.display = 'none';
+                mainSection.style.display = '';
+                startApp();
+            }
+        </script>
+</body>
+
+</html>

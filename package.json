@@ -1,0 +1,36 @@
+{
+    "name": "blindman-stick-tracker",
+    "version": "1.0.0",
+    "description": "A tracking system for blindman's stick with real-time location updates and alert notifications",
+    "main": "backend-server.js",
+    "scripts": {
+        "start": "node backend-server.js",
+        "dev": "nodemon backend-server.js",
+        "setup": "node run-system.js"
+    },
+    "keywords": [
+        "blind",
+        "tracking",
+        "gps",
+        "location",
+        "assistance"
+    ],
+    "author": "Blindman Stick Tracking Team",
+    "license": "MIT",
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
+        "express": "^4.21.2",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.17.2",
+        "socket.io": "^4.8.1",
+        "winston": "^3.17.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}
