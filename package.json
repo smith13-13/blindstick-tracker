@@ -18,7 +18,7 @@
     "author": "Blindman Stick Tracking Team",
     "license": "MIT",
     "dependencies": {
-        "bcrypt": "^5.1.1",
+        "bcryptjs": "^3.0.2",
         "cors": "^2.8.5",
         "dotenv": "^17.2.1",
         "express": "^4.21.2",

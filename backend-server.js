@@ -6,7 +6,7 @@ const Alert = require('./models/Alert');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 
 const cors = require('cors');
