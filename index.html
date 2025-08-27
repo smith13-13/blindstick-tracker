@@ -161,7 +161,7 @@
         let marker = L.marker([-1.9441, 30.0619]).addTo(map);
 
         // Socket.IO connection
-        const socket = io('http://192.168.137.58:3000', {
+        const socket = io('https://blindstick-tracker-1.onrender.com', {
             query: {
                 token: localStorage.getItem('authToken')
             }
@@ -209,7 +209,7 @@
         // Fetch location history from protected REST endpoint and update UI
         async function fetchLocationHistory() {
             try {
-                const res = await fetch('http://192.168.137.58:3000/api/location-history', {
+                const res = await fetch('https://blindstick-tracker-1.onrender.com/api/location-history', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                     }
@@ -233,7 +233,7 @@
         // Fetch alert history from protected REST endpoint and update UI
         async function fetchAlertHistory() {
             try {
-                const res = await fetch('http://192.168.137.58:3000/api/alerts', {
+                const res = await fetch('https://blindstick-tracker-1.onrender.com/api/alerts', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                     }

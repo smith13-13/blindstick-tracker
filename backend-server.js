@@ -34,8 +34,8 @@ const logger = winston.createLogger({
     transports: [new winston.transports.Console()]
 });
 
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/blindman-stick';
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+const MONGO_URI = process.env.MONGODB_URI;
+mongoose.connect(MONGO_URI)
     .then(() => logger.info('Connected to MongoDB'))
     .catch(err => {
         logger.error('MongoDB connection error:', err);
@@ -183,4 +183,4 @@ app.get('/api/alerts', authenticateToken, async(req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => logger.info(`Backend running on http://localhost:${PORT}`));
+server.listen(PORT, () => logger.info(`Backend running on port ${PORT}`));
