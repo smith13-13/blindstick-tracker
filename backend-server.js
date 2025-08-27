@@ -20,19 +20,10 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Enable CORS for all origins and handle preflight requests
-app.use(cors({ origin: '*', credentials: false }));
-app.options('*', cors({ origin: '*', credentials: false }));
-// Fallback: Add CORS headers to all responses (for Render/static hosting quirks)
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
+// Enable CORS for only the deployed frontend domain
+const allowedOrigin = 'https://smart-blindstick-tracker.onrender.com';
+app.use(cors({ origin: allowedOrigin, credentials: false }));
+app.options('*', cors({ origin: allowedOrigin, credentials: false }));
 app.use(express.json());
 
 // Logger setup
