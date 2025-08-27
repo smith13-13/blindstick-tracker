@@ -20,8 +20,19 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Enable CORS for all origins and credentials
-app.use(cors({ origin: true, credentials: true }));
+// Enable CORS for all origins and handle preflight requests
+app.use(cors({ origin: '*', credentials: false }));
+app.options('*', cors({ origin: '*', credentials: false }));
+// Fallback: Add CORS headers to all responses (for Render/static hosting quirks)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 app.use(express.json());
 
 // Logger setup
